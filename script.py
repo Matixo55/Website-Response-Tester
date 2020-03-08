@@ -13,6 +13,7 @@ log_website = open("Index.html", "w+")
 log.write("\n\n'{}\n".format(datetime.datetime.now()))
 log_website.write("<html>\n<body>\n<p><b>{}</b>".format(datetime.datetime.now()))
 # Illiterate over website links
+print("Starting process")
 for link in config.sections():
     # Load configuration
     website = config[link]
@@ -50,9 +51,10 @@ for link in config.sections():
 log_website.write("</p>\n</html>\n</body>")
 log.close()
 log_website.close()
-
+print("Latencies checked")
 port = int(config["DEFAULT"]["ServerPort"])
 handler = http.server.SimpleHTTPRequestHandler
 # Start local server
+print("Creating local server")
 with socketserver.TCPServer(("", port), handler) as httpd:
     httpd.serve_forever()
