@@ -7,3 +7,6 @@ project1/.idea/project1.iml
 project1/.idea/vcs.xml
 Index.html
 log.txt
+*.xml
+.idea/website-latency-check.iml
+script_old.py
