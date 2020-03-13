@@ -10,3 +10,4 @@ log.txt
 *.xml
 .idea/website-latency-check.iml
 script_old.py
+*.pyc

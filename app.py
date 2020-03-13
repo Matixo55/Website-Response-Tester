@@ -1,15 +1,14 @@
 import configparser
 import datetime
-import http.server
-import time
 import re
 import requests
-import socketserver
+from flask import Flask
 
 
 def create_website():
-    print("Creating local website")
-    log_website.write("<html>\n<body>\n<p><b>{}</b>".format(datetime.datetime.now()))
+    print("Creating website file")
+    log_website.write(
+        "<html>\n<head>\n<title>Latencies</title></head>\n<body>\n<p><b>{}</b>".format(datetime.datetime.now()))
     for url in websites:
         log_website.write("\n<br><br>Website: <a href='{}'>{}</a>".format(url.link, url.link))
         if url.error is not None:
@@ -19,13 +18,6 @@ def create_website():
             log_website.write("\n<br><font color='green'>Response time: {}s</font>".format(url.latency))
     log_website.write("</p>\n</html>\n</body>")
     log_website.close()
-
-    port = int(config["DEFAULT"]["ServerPort"])
-    handler = http.server.SimpleHTTPRequestHandler
-    print("Creating local server\nType localhost:{} in Your browser".format(port))
-    server = socketserver.TCPServer(("", port), handler)
-    server.serve_forever(5)
-    server.shutdown()
 
 
 def http_requests():
@@ -99,6 +91,11 @@ class Website:
             self.error = str(exception)
 
 
-while True:
+app = Flask(__name__)
+
+
+@app.route('/')
+def server():
     run()
-    time.sleep(int(config["DEFAULT"]["Delay"]))
+    with open('Index.html', "r") as website:
+        return website.read()
