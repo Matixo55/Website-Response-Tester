@@ -41,28 +41,32 @@ def is_valid_url(url_to_check):
 
 def run():
     while True:
-        global websites, config
-        config = configparser.ConfigParser()
-        config.read('config.ini')
-        websites = []
-        if config["DEFAULT"]["ConsoleNotifications"] == 'True':
-            print("Setting up")
-            print("Checking websites")
-            http_requests()
-            if config["DEFAULT"]["FileLog"] == 'True':
-                print("Creating log")
-                update_log()
-            print("Creating website file")
-            create_website()
-            time.sleep(int(config["DEFAULT"]["Delay"]))
-        elif config["DEFAULT"]["ConsoleNotifications"] == 'False':
-            http_requests()
-            if config["DEFAULT"]["FileLog"] == 'True':
-                update_log()
-            create_website()
-            time.sleep(int(config["DEFAULT"]["Delay"]))
-        else:
-            print("Error reading settings")
+        try:
+            global websites, config
+            config = configparser.ConfigParser()
+            config.read('config.ini')
+            websites = []
+            if config["DEFAULT"]["ConsoleNotifications"] == 'True':
+                print("Setting up")
+                print("Checking websites")
+                http_requests()
+                if config["DEFAULT"]["FileLog"] == 'True':
+                    print("Creating log")
+                    update_log()
+                print("Creating website file")
+                create_website()
+            elif config["DEFAULT"]["ConsoleNotifications"] == 'False':
+                http_requests()
+                if config["DEFAULT"]["FileLog"] == 'True':
+                    update_log()
+                create_website()
+            else:
+                raise ValueError
+            time.sleep(float(config["DEFAULT"]["Delay"]))
+        except ValueError:
+            print("ERROR occurred while reading configuration file")
+        except BaseException as error:
+            print(str(error))
 
 
 def update_log():
@@ -104,7 +108,6 @@ class Website:
 
 process1 = Thread(target=run)
 process1.start()
-
 app = Flask(__name__)
 website_html = ""
 
