@@ -2,26 +2,27 @@ import configparser
 import datetime
 import re
 import requests
+import time
 from flask import Flask
+from threading import Thread
 
 
 def create_website():
-    print("Creating website file")
-    log_website.write(
-        "<html>\n<head>\n<title>Latencies</title></head>\n<body>\n<p><b>{}</b>".format(datetime.datetime.now()))
+    global website_html
+    local_website_html = "<html>\n<head>\n<title>Latencies</title></head>\n<body>\n<p><b>{}</b>".format(
+        datetime.datetime.now())
     for url in websites:
-        log_website.write("\n<br><br>Website: <a href='{}'>{}</a>".format(url.link, url.link))
+        local_website_html += "\n<br><br>Website: <a href='{}'>{}</a>".format(url.link, url.link)
         if url.error is not None:
-            log_website.write("\n<br><font color='red'>ERROR {}</font>".format(url.error))
+            local_website_html += "\n<br><font color='red'>ERROR {}</font>".format(url.error)
         else:
-            log_website.write("\n<br>Status code: {}".format(url.status))
-            log_website.write("\n<br><font color='green'>Response time: {}s</font>".format(url.latency))
-    log_website.write("</p>\n</html>\n</body>")
-    log_website.close()
+            local_website_html += "\n<br>Status code: {}\n<br><font color='green'>Response time: {}s</font>".format(
+                url.status, url.latency)
+    local_website_html += "</p>\n</html>\n</body>"
+    website_html = local_website_html
 
 
 def http_requests():
-    print("Checking websites")
     for url in config.sections():
         websites.append(Website(url))
 
@@ -39,32 +40,42 @@ def is_valid_url(url_to_check):
 
 
 def run():
-    setup_process()
-    http_requests()
-    update_log()
-    create_website()
-
-
-def setup_process():
-    print("Setting up")
-    global websites, log, log_website, config
-    config = configparser.ConfigParser()
-    config.read('config.ini')
-    log = open('log.txt', "a")
-    log_website = open("Index.html", "w")
-    websites = []
+    while True:
+        global websites, config
+        config = configparser.ConfigParser()
+        config.read('config.ini')
+        websites = []
+        if config["DEFAULT"]["ConsoleNotifications"] == 'True':
+            print("Setting up")
+            print("Checking websites")
+            http_requests()
+            if config["DEFAULT"]["FileLog"] == 'True':
+                print("Creating log")
+                update_log()
+            print("Creating website file")
+            create_website()
+            time.sleep(int(config["DEFAULT"]["Delay"]))
+        elif config["DEFAULT"]["ConsoleNotifications"] == 'False':
+            http_requests()
+            if config["DEFAULT"]["FileLog"] == 'True':
+                update_log()
+            create_website()
+            time.sleep(int(config["DEFAULT"]["Delay"]))
+        else:
+            print("Error reading settings")
 
 
 def update_log():
-    print("Creating log")
-    log.write("{}\n".format(datetime.datetime.now()))
+    log_text = "{}\n".format(datetime.datetime.now())
     for url in websites:
-        log.write("Website: {}\nRequired text: {}".format(url.link, url.text))
+        log_text += "Website: {}\nRequired text: {}".format(url.link, url.text)
         if url.error is not None:
-            log.write("\nERROR {}\n\n".format(url.error))
+            log_text += "\nERROR {}\n\n".format(url.error)
         else:
-            log.write("\nStatus code: {}".format(url.status))
-            log.write("\nResponse time: {}s\n\n".format(url.latency))
+            log_text += "\nStatus code: {}\nResponse time: {}s\n\n".format(url.status, url.latency)
+
+    log = open('log.txt', "a")
+    log.write(log_text)
     log.close()
 
 
@@ -91,11 +102,17 @@ class Website:
             self.error = str(exception)
 
 
+process1 = Thread(target=run)
+process1.start()
+
 app = Flask(__name__)
+website_html = ""
 
 
 @app.route('/')
-def server():
-    run()
-    with open('Index.html', "r") as website:
-        return website.read()
+def home():
+    return website_html
+
+
+process2 = Thread(target=home)
+process2.start()
