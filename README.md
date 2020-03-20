@@ -1,5 +1,4 @@
 # Website response tester
-=====
 ### Description
 A simple script allowing you to control chosen website's status and response time while distinguishing problems.
 <br>Including file log, console notifications and local server hosting results.
