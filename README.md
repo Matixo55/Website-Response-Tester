@@ -12,5 +12,5 @@ A simple script allowing you to control chosen website's status and response tim
 Full requirements are listed in **requirements.txt** file
 ### Usage
 Run the script using `Flask run` command.
-<br>To access website with results type `localhost:5000` in Your browser.
+<br>To access website with results type `localhost:5000` or `http://127.0.0.1:5000/`in Your browser.
 <br>**Do not have more than one website response tester script running at the same time** - it will cause it to malfunction! 
